@@ -362,6 +362,8 @@ static void sighandler(int sig)
 {
   switch (sig) {
   case SIGINT:
+  case SIGQUIT:
+  case SIGTERM:
     g_main_loop_quit(main_loop);
     break;
   }
