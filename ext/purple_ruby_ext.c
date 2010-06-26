@@ -389,6 +389,8 @@ static VALUE init(int argc, VALUE *argv, VALUE self)
   signal(SIGCHLD, SIG_IGN);
   signal(SIGPIPE, SIG_IGN);
   signal(SIGINT, sighandler);
+  signal(SIGQUIT, sighandler);
+  signal(SIGTERM, sighandler);
 
   data_hash_table = g_hash_table_new(NULL, NULL);
   fd_hash_table = g_hash_table_new(NULL, NULL);
