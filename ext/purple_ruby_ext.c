@@ -692,7 +692,7 @@ static VALUE chat_send(VALUE self, VALUE id, VALUE message)
 
 /* 
  * call-seq:
- * find_conversation(type, name)
+ * find_conversation(name)
  *
  * Find conversation with given name
  */
@@ -714,6 +714,12 @@ static VALUE account_find_conversation(VALUE self, VALUE name)
   return Qnil;
 }
 
+/*
+ * call-seq:
+ * join_chat(chat_id)
+ *
+ * Join chat
+ */
 static VALUE account_join_chat(VALUE self, VALUE name)
 {
   PurpleAccount *account;
@@ -721,35 +727,18 @@ static VALUE account_join_chat(VALUE self, VALUE name)
   GHashTable *data;
 
   if (purple_account_is_connected(account)) {
-    data = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
+    data = g_hash_table_new(g_str_hash, g_str_equal);
 
     g_hash_table_insert(data, "chat_id", StringValueCStr(name));
 
     serv_join_chat(purple_account_get_connection(account), data);
 
-    g_free(data);
+    g_hash_table_destroy(data);
 
     return Qtrue;
   }
 
   return Qfalse;
-}
-
-static VALUE account_create_chat(VALUE self, VALUE name)
-{
-  PurpleAccount *account;
-  PurpleConversation *conv;
-
-  Data_Get_Struct(self, PurpleAccount, account);
-  conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account, StringValueCStr(name));
-
-  if (conv != NULL) {
-    VALUE conversation = Data_Wrap_Struct(cConversation, NULL, NULL, conv);
-    
-    return conversation;
-  }
-
-  return Qnil;
 }
 
 /*
@@ -914,7 +903,7 @@ static VALUE conversation_im_send(VALUE self, VALUE message)
 {
   PurpleConversation *conversation;
   Data_Get_Struct(self, PurpleConversation, conversation);
-  PurpleConvChat *im_data =  PURPLE_CONV_IM(conversation);
+  PurpleConvIm *im_data =  PURPLE_CONV_IM(conversation);
 
   if (im_data == NULL) {
     return Qnil;
@@ -1130,7 +1119,6 @@ void Init_purple_ruby_ext()
   rb_define_method(cAccount, "protocol_id", protocol_id, 0);
   rb_define_method(cAccount, "protocol_name", protocol_name, 0);
   rb_define_method(cAccount, "find_conversation", account_find_conversation, 1);
-  rb_define_method(cAccount, "create_chat", account_create_chat, 1);
   rb_define_method(cAccount, "join_chat", account_join_chat, 1);
   rb_define_method(cAccount, "get_bool_setting", get_bool_setting, 2);
   rb_define_method(cAccount, "set_bool_setting", set_bool_setting, 2);
