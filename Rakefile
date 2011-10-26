@@ -29,6 +29,7 @@ file EXT => ["ext/extconf.rb", "ext/purple_ruby_ext.c"] do
   end
 end
 
+=begin
 require 'spec/rake/spectask'
 Spec::Rake::SpecTask.new(:spec) do |spec|
   spec.libs << 'lib' << 'spec'
@@ -42,6 +43,7 @@ Spec::Rake::SpecTask.new(:rcov) do |spec|
 end
 
 task :spec => :check_dependencies
+=end
 
 # task :default => :spec
 

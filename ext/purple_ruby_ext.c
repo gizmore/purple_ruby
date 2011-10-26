@@ -120,7 +120,7 @@ static PurpleEventLoopUiOps glib_eventloops =
   NULL
 };
 
-static VALUE cPurpleRuby, cProtocol;
+static VALUE cPurpleRuby, cProtocol, cConversation;
 VALUE cAccount;
 const char* UI_ID = "purplegw";
 static GMainLoop *main_loop = NULL;
@@ -775,13 +775,43 @@ static VALUE list_protocols(VALUE self)
   VALUE array = rb_ary_new();
 
   GList *iter = purple_plugins_get_protocols();
-  int i;
-  for (i = 0; iter; iter = iter->next) {
+  for (; iter; iter = iter->next) {
     VALUE protocol = Data_Wrap_Struct(cProtocol, NULL, NULL, iter->data);
     rb_ary_push(array, protocol);
   }
 
   return array;
+}
+
+static VALUE list_conversations(VALUE self)
+{
+  VALUE array = rb_ary_new();
+  
+  GList *iter = purple_get_conversations();
+  for (; iter; iter = iter->next) {
+    VALUE conversation = Data_Wrap_Struct(cConversation, NULL, NULL, iter->data);
+    rb_ary_push(array, conversation);
+  }
+
+  return array;
+}
+
+static VALUE conversation_get_title(VALUE self) 
+{
+  PurpleConversation *conversation;
+  Data_Get_Struct(self, PurpleConversation, conversation);
+  const char* title = purple_conversation_get_title(conversation);
+
+  return rb_str_new2(title);
+}
+
+static VALUE conversation_get_name(VALUE self)
+{
+  PurpleConversation *conversation;
+  Data_Get_Struct(self, PurpleConversation, conversation);
+  const char* name = purple_conversation_get_name(conversation);
+
+  return rb_str_new2(name);
 }
 
 static VALUE add_buddy(VALUE self, VALUE buddy)
@@ -938,6 +968,7 @@ void Init_purple_ruby_ext()
   cPurpleRuby = rb_define_class("PurpleRuby", rb_cObject);
   rb_define_singleton_method(cPurpleRuby, "init", init, -1);
   rb_define_singleton_method(cPurpleRuby, "list_protocols", list_protocols, 0);
+  rb_define_singleton_method(cPurpleRuby, "list_conversations", list_conversations, 0);
   rb_define_singleton_method(cPurpleRuby, "watch_signed_on_event", watch_signed_on_event, 0);
   rb_define_singleton_method(cPurpleRuby, "watch_connection_error", watch_connection_error, 0);
   rb_define_singleton_method(cPurpleRuby, "watch_incoming_im", watch_incoming_im, 0);
@@ -987,4 +1018,11 @@ void Init_purple_ruby_ext()
   rb_define_method(cProtocol, "to_str", protocol_to_s, 0);
   rb_define_method(cProtocol, "to_s", protocol_to_s, 0);
 
+  /*
+   * Class Conversation
+   *
+   */
+  cConversation = rb_define_class_under(cPurpleRuby, "Conversation", rb_cObject);
+  rb_define_method(cConversation, "title", conversation_get_title, 0);
+  rb_define_method(cConversation, "name", conversation_get_name, 0);
 }
