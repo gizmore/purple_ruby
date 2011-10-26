@@ -814,6 +814,28 @@ static VALUE conversation_get_name(VALUE self)
   return rb_str_new2(name);
 }
 
+static VALUE conversation_send_im(VALUE self, VALUE message)
+{
+  PurpleConversation *conversation;
+  Data_Get_Struct(self, PurpleConversation, conversation);
+  PurpleConvChat *chat_data =  PURPLE_CONV_CHAT(conversation);
+
+  if (chat_data == NULL) {
+    PurpleConvIm *im_data = PURPLE_CONV_IM(conversation);
+    if (im_data == NULL) {
+      return Qnil;
+    }
+    else {
+      purple_conv_im_send(im_data, RSTRING_PTR(message));
+    }
+  }
+  else {
+    purple_conv_chat_send(chat_data, RSTRING_PTR(message));
+  }
+
+  return Qtrue;
+}
+
 static VALUE add_buddy(VALUE self, VALUE buddy)
 {
   PurpleAccount *account;
@@ -1025,4 +1047,5 @@ void Init_purple_ruby_ext()
   cConversation = rb_define_class_under(cPurpleRuby, "Conversation", rb_cObject);
   rb_define_method(cConversation, "title", conversation_get_title, 0);
   rb_define_method(cConversation, "name", conversation_get_name, 0);
+  rb_define_method(cConversation, "send_im", conversation_send_im, 1);
 }
