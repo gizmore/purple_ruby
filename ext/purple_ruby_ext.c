@@ -672,6 +672,49 @@ static VALUE send_im(VALUE self, VALUE name, VALUE message)
 }
 
 /*
+ * call-seq:
+ * chat_send(chat_id, message)
+ *
+ * Send an message to chat
+ */
+static VALUE chat_send(VALUE self, VALUE id, VALUE message) 
+{
+  PurpleAccount *account;
+  Data_Get_Struct(self, PurpleAccount, account);
+
+  if (purple_account_is_connected(account)) {
+    int i = serv_chat_send(purple_account_get_connection(account), rb_Integer(id), StringValueCStr(message), 0);
+    return INT2FIX(i);
+  } else {
+    return Qnil;
+  }
+}
+
+/* 
+ * call-seq:
+ * find_conversation(type, name)
+ *
+ * Find conversation with given name
+ */
+static VALUE account_find_conversation(VALUE self, VALUE type, VALUE name)
+{
+  PurpleAccount *account;
+  Data_Get_Struct(self, PurpleAccount, account);
+  
+  if (purple_account_is_connected(account)) {
+    PurpleConversation *conv = purple_find_conversation_with_account(rb_Integer(type), StringValueCStr(name), account);
+
+    if (conv != NULL) {
+      VALUE conversation = Data_Wrap_Struct(cConversation, NULL, NULL, conv);
+
+      return conversation;
+    }
+  }
+    
+  return Qnil;
+}
+
+/*
  * Returns account username (String).
  *
  */
@@ -814,26 +857,57 @@ static VALUE conversation_get_name(VALUE self)
   return rb_str_new2(name);
 }
 
-static VALUE conversation_send_im(VALUE self, VALUE message)
+static VALUE conversation_get_chat_id(VALUE self)
+{
+  PurpleConversation *conversation;
+  Data_Get_Struct(self, PurpleConversation, conversation);
+  PurpleConvChat *chat_data = PURPLE_CONV_CHAT(conversation);
+
+  if (chat_data != NULL) {
+    int id = purple_conv_chat_get_id(chat_data);
+
+    return INT2FIX(id);
+  }
+
+  return Qnil;
+}
+
+static VALUE conversation_im_send(VALUE self, VALUE message) 
+{
+  PurpleConversation *conversation;
+  Data_Get_Struct(self, PurpleConversation, conversation);
+  PurpleConvChat *im_data =  PURPLE_CONV_IM(conversation);
+
+  if (im_data == NULL) {
+    return Qnil;
+  }
+  else {
+    purple_conv_im_send(im_data, StringValueCStr(message));
+    return Qtrue;
+  }
+}
+
+static VALUE conversation_get_type(VALUE self) 
+{
+  PurpleConversation *conversation;
+  Data_Get_Struct(self, PurpleConversation, conversation);
+
+  return INT2FIX(purple_conversation_get_type(conversation));
+}
+
+static VALUE conversation_chat_send(VALUE self, VALUE message)
 {
   PurpleConversation *conversation;
   Data_Get_Struct(self, PurpleConversation, conversation);
   PurpleConvChat *chat_data =  PURPLE_CONV_CHAT(conversation);
 
   if (chat_data == NULL) {
-    PurpleConvIm *im_data = PURPLE_CONV_IM(conversation);
-    if (im_data == NULL) {
-      return Qnil;
-    }
-    else {
-      purple_conv_im_send(im_data, RSTRING_PTR(message));
-    }
+    return Qnil;
   }
   else {
-    purple_conv_chat_send(chat_data, RSTRING_PTR(message));
+    purple_conv_chat_send(chat_data, StringValueCStr(message));
+    return Qtrue;
   }
-
-  return Qtrue;
 }
 
 static VALUE add_buddy(VALUE self, VALUE buddy)
@@ -1013,9 +1087,11 @@ void Init_purple_ruby_ext()
    */
   cAccount = rb_define_class_under(cPurpleRuby, "Account", rb_cObject);
   rb_define_method(cAccount, "send_im", send_im, 2);
+  rb_define_method(cAccount, "send_chat", chat_send, 2);
   rb_define_method(cAccount, "username", username, 0);
   rb_define_method(cAccount, "protocol_id", protocol_id, 0);
   rb_define_method(cAccount, "protocol_name", protocol_name, 0);
+  rb_define_method(cAccount, "find_conversation", account_find_conversation, 2);
   rb_define_method(cAccount, "get_bool_setting", get_bool_setting, 2);
   rb_define_method(cAccount, "set_bool_setting", set_bool_setting, 2);
   rb_define_method(cAccount, "get_int_setting", get_int_setting, 2);
@@ -1045,7 +1121,18 @@ void Init_purple_ruby_ext()
    *
    */
   cConversation = rb_define_class_under(cPurpleRuby, "Conversation", rb_cObject);
+
+  rb_define_const(cConversation, "TYPE_UNKNOWN", INT2NUM(PURPLE_CONV_TYPE_UNKNOWN));
+  rb_define_const(cConversation, "TYPE_IM", INT2NUM(PURPLE_CONV_TYPE_IM));
+  rb_define_const(cConversation, "TYPE_CHAT", INT2NUM(PURPLE_CONV_TYPE_CHAT));
+  rb_define_const(cConversation, "TYPE_MISC", INT2NUM(PURPLE_CONV_TYPE_MISC));
+  rb_define_const(cConversation, "TYPE_ANY", INT2NUM(PURPLE_CONV_TYPE_ANY));
+
   rb_define_method(cConversation, "title", conversation_get_title, 0);
+  rb_define_method(cConversation, "to_s", conversation_get_title, 0);
   rb_define_method(cConversation, "name", conversation_get_name, 0);
-  rb_define_method(cConversation, "send_im", conversation_send_im, 1);
+  rb_define_method(cConversation, "chat_id", conversation_get_chat_id, 0);
+  rb_define_method(cConversation, "im_send", conversation_im_send, 1);
+  rb_define_method(cConversation, "chat_send", conversation_chat_send, 1);
+  rb_define_method(cConversation, "type", conversation_get_type, 0);
 }

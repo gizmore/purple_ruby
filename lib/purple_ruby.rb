@@ -68,3 +68,17 @@ Purple::Account.class_eval do
   end
 
 end
+
+Purple::Conversation.class_eval do
+  def inspect
+    "<#Conversation: type=#{type}, name=#{name.inspect}, title=#{title.inspect}, chat_id=#{chat_id.inspect}}"
+  end
+
+  def send_message(message)
+    if type == TYPE_CHAT
+      chat_send(message)
+    else
+      im_send(message)
+    end
+  end
+end
