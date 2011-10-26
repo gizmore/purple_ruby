@@ -714,6 +714,23 @@ static VALUE account_find_conversation(VALUE self, VALUE name)
   return Qnil;
 }
 
+static VALUE account_create_chat(VALUE self, VALUE name)
+{
+  PurpleAccount *account;
+  PurpleConversation *conv;
+
+  Data_Get_Struct(self, PurpleAccount, account);
+  conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account, StringValueCStr(name));
+
+  if (conv != NULL) {
+    VALUE conversation = Data_Wrap_Struct(cConversation, NULL, NULL, conv);
+    
+    return conversation;
+  }
+
+  return Qnil;
+}
+
 /*
  * Returns account username (String).
  *
@@ -1092,6 +1109,7 @@ void Init_purple_ruby_ext()
   rb_define_method(cAccount, "protocol_id", protocol_id, 0);
   rb_define_method(cAccount, "protocol_name", protocol_name, 0);
   rb_define_method(cAccount, "find_conversation", account_find_conversation, 1);
+  rb_define_method(cAccount, "create_chat", account_create_chat, 1);
   rb_define_method(cAccount, "get_bool_setting", get_bool_setting, 2);
   rb_define_method(cAccount, "set_bool_setting", set_bool_setting, 2);
   rb_define_method(cAccount, "get_int_setting", get_int_setting, 2);
