@@ -696,13 +696,13 @@ static VALUE chat_send(VALUE self, VALUE id, VALUE message)
  *
  * Find conversation with given name
  */
-static VALUE account_find_conversation(VALUE self, VALUE type, VALUE name)
+static VALUE account_find_conversation(VALUE self, VALUE name)
 {
   PurpleAccount *account;
   Data_Get_Struct(self, PurpleAccount, account);
   
   if (purple_account_is_connected(account)) {
-    PurpleConversation *conv = purple_find_conversation_with_account(rb_Integer(type), StringValueCStr(name), account);
+    PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_ANY, StringValueCStr(name), account);
 
     if (conv != NULL) {
       VALUE conversation = Data_Wrap_Struct(cConversation, NULL, NULL, conv);
@@ -1091,7 +1091,7 @@ void Init_purple_ruby_ext()
   rb_define_method(cAccount, "username", username, 0);
   rb_define_method(cAccount, "protocol_id", protocol_id, 0);
   rb_define_method(cAccount, "protocol_name", protocol_name, 0);
-  rb_define_method(cAccount, "find_conversation", account_find_conversation, 2);
+  rb_define_method(cAccount, "find_conversation", account_find_conversation, 1);
   rb_define_method(cAccount, "get_bool_setting", get_bool_setting, 2);
   rb_define_method(cAccount, "set_bool_setting", set_bool_setting, 2);
   rb_define_method(cAccount, "get_int_setting", get_int_setting, 2);
