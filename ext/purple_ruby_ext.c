@@ -651,6 +651,13 @@ static VALUE main_loop_stop(VALUE self)
   return Qnil;
 }
 
+static VALUE main_loop_step(VALUE self)
+{
+  g_main_context_iteration(NULL, 0);
+  return Qnil;
+}
+
+
 /*
  * call-seq:
  * send_im(contact, message)
@@ -1103,6 +1110,7 @@ void Init_purple_ruby_ext()
   rb_define_singleton_method(cPurpleRuby, "login", login, 3);
   rb_define_singleton_method(cPurpleRuby, "main_loop_run", main_loop_run, 0);
   rb_define_singleton_method(cPurpleRuby, "main_loop_stop", main_loop_stop, 0);
+  rb_define_singleton_method(cPurpleRuby, "main_loop_step", main_loop_step, 0);
 
   rb_define_const(cPurpleRuby, "NOTIFY_MSG_ERROR", INT2NUM(PURPLE_NOTIFY_MSG_ERROR));
   rb_define_const(cPurpleRuby, "NOTIFY_MSG_WARNING", INT2NUM(PURPLE_NOTIFY_MSG_WARNING));
