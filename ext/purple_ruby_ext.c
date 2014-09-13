@@ -656,7 +656,10 @@ static VALUE main_loop_stop(VALUE self)
 
 static VALUE main_loop_step(VALUE self)
 {
-  g_main_context_iteration(NULL, 0);
+  if (g_main_pending())
+  {
+    g_main_context_iteration(NULL, 0);
+  }
   return Qnil;
 }
 
