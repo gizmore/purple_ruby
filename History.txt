@@ -1,2 +1,7 @@
-== 0.1.0
+== 0.6.4
  
++ Used great fork of valodzka
+
++ Added "main_loop_step" from strelok1111
+
+* Fixed a null pointer for the non mainloopers.
