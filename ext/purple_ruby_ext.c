@@ -389,11 +389,11 @@ static VALUE init(int argc, VALUE *argv, VALUE self)
     path = rb_hash_aref(settings, ID2SYM(USER_DIR));
   }
 
-  signal(SIGCHLD, SIG_IGN);
-  signal(SIGPIPE, SIG_IGN);
-  signal(SIGINT, sighandler);
-  signal(SIGQUIT, sighandler);
-  signal(SIGTERM, sighandler);
+//  signal(SIGCHLD, SIG_IGN);
+//  signal(SIGPIPE, SIG_IGN);
+//  signal(SIGINT, sighandler);
+//  signal(SIGQUIT, sighandler);
+//  signal(SIGTERM, sighandler);
 
   data_hash_table = g_hash_table_new(NULL, NULL);
   fd_hash_table = g_hash_table_new(NULL, NULL);
