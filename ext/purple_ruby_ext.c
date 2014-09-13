@@ -364,7 +364,10 @@ static void sighandler(int sig)
   case SIGINT:
   case SIGQUIT:
   case SIGTERM:
-    g_main_loop_quit(main_loop);
+    if (main_loop)
+    {
+      g_main_loop_quit(main_loop);
+    }
     break;
   }
 }
